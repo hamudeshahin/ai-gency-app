@@ -19,6 +19,11 @@ const useFetch = (props: UseFetchProps) => {
     setIsLoading(true);
     try {
       const response = await callApiFunc(props);
+
+      if (response.status === false) {
+        setError(response?.message || "Something went wrong.");
+        return;
+      }
       setData(response);
     } catch (error) {
       setError(String(error));
