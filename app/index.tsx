@@ -6,6 +6,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import useFetch from "@/hooks/useFetch";
 import Alert from "@/components/Alert";
+import { Link } from "expo-router";
 
 async function fetchHomeData() {
   const url = `https://aigency.dev/api/v1/ai-team-list/?access_token=${
@@ -41,6 +42,9 @@ export default function HomeScreen() {
   return (
     <ThemedView>
       <ThemedText>Home Page</ThemedText>
+      <Link href={'/(auth)/login'}>
+        <ThemedText>Go To Login</ThemedText>
+      </Link>
     </ThemedView>
   );
 }
