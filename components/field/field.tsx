@@ -55,7 +55,7 @@ const Field = (props: FieldProps) => {
       control={control}
       rules={rules}
       render={({ field: { onChange, onBlur, value } }) => (
-        <ThemedView className="mb-8">
+        <ThemedView className="mb-2">
           {maybeLabel}
           <TextInput
             className="bg-[#1e1e1e] border border-gray-300 rounded p-2 py-4 text-white focus:border-red-400"

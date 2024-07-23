@@ -19,14 +19,14 @@ const schema = z.object({
   password: z.string(),
 });
 // zod schema type
-export type LoginFormSchemaType = z.infer<typeof schema>;
+export type RegisterFormSchemaType = z.infer<typeof schema>;
 
-const LoginScreen = () => {
+const RegisterScreen = () => {
   const {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginFormSchemaType>({
+  } = useForm<RegisterFormSchemaType>({
     defaultValues: {
       email: "",
       password: "",
@@ -71,9 +71,9 @@ const LoginScreen = () => {
         <Button text="Giriş Yap" type="gradient" />
         <ThemedView className="flex justify-end my-1">
           <ThemedText className="text-right">
-            Daha önce kayıt olmadınız mı?{" "}
-            <Link href="/(auth)/register">
-              <ThemedText className="text-secondary">Kayıt ol</ThemedText>
+            Daha Önce Hesabınız var mı?{" "}
+            <Link href={"/(auth)/login"}>
+              <ThemedText className="text-secondary">Giriş Yap</ThemedText>
             </Link>
           </ThemedText>
         </ThemedView>
@@ -82,4 +82,4 @@ const LoginScreen = () => {
   );
 };
 
-export default LoginScreen;
+export default RegisterScreen;
