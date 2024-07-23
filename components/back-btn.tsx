@@ -12,7 +12,7 @@ type BackBtnProps = {
 };
 
 const BackBtn = (props: BackBtnProps) => {
-  const { classNames, iconTextClassName, iconSize = 18, href = "/" } = props;
+  const { classNames, iconTextClassName, iconSize = 18, href = null } = props;
 
   const router = useRouter();
 
@@ -22,7 +22,7 @@ const BackBtn = (props: BackBtnProps) => {
   return (
     <TouchableOpacity
       className={rootClassName}
-      onPress={() => router.push(href)}
+      onPress={() => (href ? router.push(href) : router.back())}
     >
       <ThemedText className={iconTextClassNames}>
         <Entypo name="chevron-thin-left" size={iconSize} color="inherit" />

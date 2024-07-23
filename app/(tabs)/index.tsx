@@ -1,59 +1,157 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import {
+  Image,
+  StyleSheet,
+  Platform,
+  Text,
+  View,
+  ScrollView,
+} from "react-native";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { HelloWave } from "@/components/HelloWave";
+import ParallaxScrollView from "@/components/ParallaxScrollView";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import useFetch from "@/hooks/useFetch";
+import Alert from "@/components/Alert";
+import { Link } from "expo-router";
+import Button from "@/components/button";
+
+import Logo from "@/assets/logo/logo.svg";
+import CircleGradient from "@/components/circle-gradient";
+
+import Animated, {
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  FadeIn,
+  FadeOut,
+} from "react-native-reanimated";
+import useFadeInFadeOut from "@/hooks/useFadeInFadeOut";
+import AiTeam from "@/components/ai-team";
+import Categories from "@/components/categories";
+
+async function fetchHomeData() {
+  const AIListURL = `https://aigency.dev/api/v1/ai-team-list/?access_token=${
+    process.env.EXPO_PUBLIC_ACCESS_TOKEN as string
+  }`;
+  const categoriesListURL = `https://aigency.dev/api/v1/ai-categories/?access_token=${
+    process.env.EXPO_PUBLIC_ACCESS_TOKEN as string
+  }`;
+
+  const res = await Promise.all([
+    fetch(AIListURL, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "default",
+    }),
+    fetch(categoriesListURL, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "default",
+    }),
+  ]);
+
+  const data = await Promise.all(res.map((r) => r.json()));
+
+  return {
+    aiItems: data[0],
+    categoryItems: data[1],
+  };
+}
 
 export default function HomeScreen() {
+  const { fadeStyle } = useFadeInFadeOut();
+
+  const {
+    isLoading,
+    error,
+    data = [],
+  } = useFetch({
+    callApiFunc: fetchHomeData,
+    callOnMount: true,
+  });
+
+  // parse data
+  const { aiItems = [], categoryItems = [] } = data || {};
+  if (isLoading) {
+    return <ThemedText>Loading...</ThemedText>;
+  }
+
+  if (error) {
+    return <Alert title="Error" message={error} type="error" />;
+  }
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
+    <ScrollView>
+      <ThemedView className="flex-1 px-4">
+        <ThemedView className="">
+          <ThemedView className="relative flex items-center">
+            <Logo
+              width={400}
+              height={200}
+              // className="absolute z-10 -top-10 drop-shadow-2xl"
+            />
+            {/* <CircleGradient /> */}
+          </ThemedView>
+
+          <ThemedView className="mb-4">
+            <ThemedText type="title" className="text-left text-7xl">
+              Gerçek kişiler için akıllı
+            </ThemedText>
+            <Animated.Text
+              className="text-7xl font-bold text-white"
+              entering={FadeIn.duration(2000)}
+              exiting={FadeOut.duration(1000)}
+              // style={[{}, fadeStyle]}
+            >
+              çözümler
+            </Animated.Text>
+          </ThemedView>
+          <ThemedView className="flex justify-start">
+            <Button
+              type="gradient"
+              text="Giriş Yap"
+              classNames="self-start my-4"
+              gradientClassName="px-20"
+              textClassNames="font-bold"
+              href="/(auth)/login"
+            />
+          </ThemedView>
+        </ThemedView>
+        <ThemedView className="py-24">
+          <ThemedView className="border-t-2 border-yellow-500">
+            <ThemedText
+              type="title"
+              className="py-10 leading-10 -tracking-widest"
+            >
+              Yazılım, eğitim, psikoloji ve daha birçok alanda uzmanlığımızla,
+              ekibimiz gerçek sonuçlarla elde edilen akıllı çözümler sunabilir.
+            </ThemedText>
+            <Button
+              type="gradient"
+              text="Daha Fazla Bilgi"
+              classNames="self-start my-4"
+              gradientClassName="px-20"
+              textClassNames="font-bold"
+              href="/blog"
+            />
+          </ThemedView>
+        </ThemedView>
+        <AiTeam items={aiItems} />
+        <Categories items={categoryItems} />
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   stepContainer: {
@@ -65,6 +163,6 @@ const styles = StyleSheet.create({
     width: 290,
     bottom: 0,
     left: 0,
-    position: 'absolute',
+    position: "absolute",
   },
 });
