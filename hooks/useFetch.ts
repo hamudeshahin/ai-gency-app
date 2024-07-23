@@ -4,11 +4,12 @@ import React, { useCallback, useState } from "react";
 type UseFetchProps = {
   callApiFunc: (props: any) => Promise<any>;
   callOnMount?: boolean;
+  params?: any;
 };
 
 const useFetch = (props: UseFetchProps) => {
   // extract props
-  const { callApiFunc, callOnMount = false } = props;
+  const { callApiFunc, callOnMount = false, params = {} } = props;
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,10 +36,10 @@ const useFetch = (props: UseFetchProps) => {
   useFocusEffect(
     useCallback(() => {
       if (callOnMount) {
-        fetchData({});
+        fetchData(params);
       }
       return () => {};
-    }, [callOnMount, callApiFunc])
+    }, [callOnMount, callApiFunc, params])
   );
 
   return {
