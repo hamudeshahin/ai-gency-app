@@ -19,6 +19,7 @@ type ButtonProps = {
   gradientClassName?: string;
   textClassNames?: string;
   href?: string;
+  loadingText?: string;
 };
 
 const Button = (props: ButtonProps) => {
@@ -31,14 +32,15 @@ const Button = (props: ButtonProps) => {
     gradientClassName,
     textClassNames,
     href,
+    loadingText = "Yükleniyor ...",
   } = props;
 
   const router = useRouter();
 
   const maybeLoading = useMemo(() => {
-    if (loading) return "Yükleniyor ...";
+    if (loading) return loadingText;
     return text;
-  }, [loading, text]);
+  }, [loading, text, loadingText]);
 
   const bgClassNames =
     type === "gradient"
