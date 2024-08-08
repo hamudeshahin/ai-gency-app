@@ -39,7 +39,7 @@ const useFetch = (props: UseFetchProps) => {
         fetchData(params);
       }
       return () => {};
-    }, [callOnMount, callApiFunc, params])
+    }, [callOnMount, callApiFunc])
   );
 
   return {
