@@ -122,12 +122,12 @@ export default function HomeScreen() {
                             textClassNames="font-bold"
                             href="/(auth)/login"
                         />
-                        <Button
+                        {/* <Button
                             type="gradient"
                             text="Kayıt Ol"
                             classNames="self-start my-4"
                             onPress={() => openDrawer()}
-                        />
+                        /> */}
                     </ThemedView>
                 </ThemedView>
                 <ThemedView className="py-24">
