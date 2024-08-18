@@ -37,6 +37,31 @@ async function fetchChatData(id?: string) {
     return await res.json();
 }
 
+async function sendMessage(params: { chat_id: string; message: string }) {
+    console.log("sendMessage _____", params);
+
+    const url = `https://aigency.dev/api/v1/sendMessage`;
+
+    const formData = new FormData();
+    formData.append("chat_id", params.chat_id);
+    formData.append("message", params.message);
+    formData.append(
+        "access_token",
+        process.env.EXPO_PUBLIC_ACCESS_TOKEN as string
+    );
+
+    const res = await fetch(url, {
+        method: "POST",
+        body: formData,
+        headers: {
+            "Content-Type": "application/json",
+        },
+        cache: "default",
+    });
+
+    return await res.json();
+}
+
 type ChatScreenProps = {
     id: string;
 };
@@ -62,11 +87,31 @@ const ChatScreen = ({ id }: ChatScreenProps) => {
 
     const router = useRouter();
 
+    const [currentMessage, setCurrentMessage] = useState<string>("");
+    const [isSending, setIsSending] = useState<boolean>(false);
+
+    const messagesRef = React.useRef<any>(null);
+
     const { data, isLoading, error } = useFetch({
         callApiFunc: fetchChatData,
         callOnMount: true,
         params: id,
     });
+
+    const {
+        data: sendMessageData,
+        isLoading: sendMessageLoading,
+        error: sendMessageError,
+    } = useFetch({
+        callApiFunc: sendMessage,
+        callOnMount: false,
+        params: {},
+    });
+
+    console.log("sendMessageData");
+    console.log(sendMessageData);
+    console.log("senMessageError");
+    console.log(sendMessageError);
 
     const [messages, setMessages] = useState<
         {
@@ -100,13 +145,59 @@ const ChatScreen = ({ id }: ChatScreenProps) => {
         );
     }, [data]);
 
-    const onSend = useCallback((messages = []) => {
-        console.log("On Send", messages);
+    const scrollToBottom = useCallback(() => {
+        console.log("messagesRef.current");
+        console.log(messagesRef.current);
 
-        setMessages((previousMessages) =>
-            GiftedChat.append(previousMessages, messages)
-        );
-    }, []);
+        messagesRef.current?.scrollToEnd({ animated: true });
+    }, [messagesRef]);
+
+    const onSend = useCallback(
+        async (
+            messages: {
+                _id: string;
+                createdAt: string;
+                text: string;
+                user: { _id: string };
+            }[] = []
+        ) => {
+            console.log("On Send", messages);
+            setMessages((previousMessages) =>
+                GiftedChat.append(previousMessages, messages as any, false)
+            );
+
+            setIsSending(true);
+            const receivedMessage = await sendMessage({
+                chat_id: id,
+                message: messages[0].text,
+            });
+            setIsSending(false);
+            setMessages((previousMessages) =>
+                GiftedChat.append(
+                    previousMessages,
+                    [
+                        {
+                            _id: previousMessages.length + 1,
+                            text: receivedMessage?.answer?.message,
+                            createdAt: new Date(),
+                            user: {
+                                _id: 2,
+                                name: data?.ai_name,
+                                avatar: aiImages.get(data?.ai_id)?.image,
+                            },
+                        },
+                    ],
+                    false
+                )
+            );
+            scrollToBottom();
+        },
+        [data, scrollToBottom]
+    );
+
+    const showSendBtn = useMemo(() => {
+        return currentMessage?.length > 0;
+    }, [currentMessage]);
 
     const content = useMemo(() => {
         if (error)
@@ -143,6 +234,7 @@ const ChatScreen = ({ id }: ChatScreenProps) => {
                     </TouchableOpacity>
                 </ThemedView>
                 <GiftedChat
+                    messageContainerRef={messagesRef}
                     renderBubble={(props) => {
                         return (
                             <Bubble
@@ -180,7 +272,10 @@ const ChatScreen = ({ id }: ChatScreenProps) => {
                             />
                         );
                     }}
-                    messages={[...messages, ...formattedMessages]}
+                    messages={[...formattedMessages, ...messages]
+                        .slice()
+                        .reverse()}
+                    inverted={true}
                     onSend={(messages) => onSend(messages as any)}
                     user={{
                         _id: 1,
@@ -188,13 +283,16 @@ const ChatScreen = ({ id }: ChatScreenProps) => {
                     listViewProps={{
                         ref: null,
                     }}
-                    infiniteScroll
-                    scrollToBottom
+                    isTyping={isSending}
+                    scrollToBottom={true}
                     scrollToBottomStyle={{
                         backgroundColor: "#2e64e5",
                     }}
                     textInputProps={{
                         placeholderTextColor: "#666",
+                        onChange: (e: any) => {
+                            setCurrentMessage(e.nativeEvent.text);
+                        },
                         style: {
                             color: "white",
                             height: 44,
@@ -206,8 +304,6 @@ const ChatScreen = ({ id }: ChatScreenProps) => {
                         },
                     }}
                     renderInputToolbar={(props: any) => {
-                        console.log("Props", props);
-
                         return (
                             <InputToolbar
                                 {...props}
@@ -217,12 +313,10 @@ const ChatScreen = ({ id }: ChatScreenProps) => {
                                     backgroundColor: "#1e1e1e",
                                 }}
                                 renderSend={(props: any) => {
-                                    const showSend =
-                                        props.text.trim().length > 0;
-
                                     return (
-                                        <AnimatePresence presenceAffectsLayout>
+                                        <AnimatePresence>
                                             <TouchableOpacity
+                                                key={"CameraBtn"}
                                                 style={{
                                                     width: 44,
                                                     height: 44,
@@ -240,8 +334,9 @@ const ChatScreen = ({ id }: ChatScreenProps) => {
                                                     color={"white"}
                                                 />
                                             </TouchableOpacity>
-                                            {showSend && (
+                                            {currentMessage?.length > 0 && (
                                                 <MotiView
+                                                    key={"SendBtn"}
                                                     from={{
                                                         opacity: 0,
                                                         width: 0,
@@ -262,29 +357,16 @@ const ChatScreen = ({ id }: ChatScreenProps) => {
                                                         type: "timing",
                                                         duration: 300,
                                                     }}
-                                                    style={{
-                                                        height: 44,
-                                                        alignItems: "center",
-                                                        justifyContent:
-                                                            "center",
-                                                        backgroundColor:
-                                                            "#2e64e5",
-                                                    }}
                                                 >
                                                     <Send
                                                         {...props}
                                                         onPress={() => {
-                                                            props.onSend(
-                                                                {
-                                                                    text: props.text,
-                                                                },
-                                                                true
-                                                            );
+                                                            props.onSend({
+                                                                text: props.text,
+                                                            });
                                                         }}
                                                         containerStyle={{
-                                                            width: showSend
-                                                                ? 44
-                                                                : 0,
+                                                            width: 44,
                                                             height: 44,
                                                             alignItems:
                                                                 "center",
@@ -311,7 +393,19 @@ const ChatScreen = ({ id }: ChatScreenProps) => {
                 />
             </>
         );
-    }, [data, isLoading, error, messages, onSend, router]);
+    }, [
+        data,
+        isLoading,
+        error,
+        messages,
+        onSend,
+        router,
+        formattedMessages,
+        showSendBtn,
+        setCurrentMessage,
+        messagesRef,
+        isSending,
+    ]);
 
     return content;
 };
