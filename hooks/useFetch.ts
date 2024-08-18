@@ -5,11 +5,12 @@ type UseFetchProps = {
     callApiFunc: (props: any) => Promise<any>;
     callOnMount?: boolean;
     params?: any;
+    onSuccess?: (data: any) => void;
 };
 
 const useFetch = (props: UseFetchProps) => {
     // extract props
-    const { callApiFunc, callOnMount = false, params = {} } = props;
+    const { callApiFunc, callOnMount = false, params = {}, onSuccess } = props;
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
@@ -20,12 +21,15 @@ const useFetch = (props: UseFetchProps) => {
         setIsLoading(true);
         try {
             const response = await callApiFunc(props);
+            console.log("response");
+            console.log(response);
 
             if (response.status === false) {
                 setError(response?.message || "Something went wrong.");
                 return;
             }
             setData(response);
+            onSuccess?.(response);
         } catch (error) {
             setError(String(error));
         } finally {

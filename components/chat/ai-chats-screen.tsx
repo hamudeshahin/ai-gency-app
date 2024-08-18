@@ -5,6 +5,7 @@ import useFetch from "@/hooks/useFetch";
 import { FlatList, Image, TouchableOpacity } from "react-native";
 import { aiImages } from "@/data/data";
 import { useRouter } from "expo-router";
+import { Entypo } from "@expo/vector-icons";
 
 async function fetchChatData(id?: string) {
     const url = `https://aigency.dev/api/v1/view-chats?access_token=${
@@ -17,6 +18,22 @@ async function fetchChatData(id?: string) {
     });
 
     return await res.json();
+}
+
+function ScreenHeader({ title }: { title: string }) {
+    const router = useRouter();
+
+    return (
+        <ThemedView className="py-4 border-b border-gray-700 mb-4 flex-row gap-2 items-center">
+            <TouchableOpacity
+                className="bg-gray-200/10 items-center justify-center w-12 h-12 rounded-full"
+                onPress={() => router.back()}
+            >
+                <Entypo name="chevron-left" size={24} color={"white"} />
+            </TouchableOpacity>
+            <ThemedText type="subtitle">{title} ile Sohbetlerim</ThemedText>
+        </ThemedView>
+    );
 }
 
 type AiChatItem = {
@@ -74,9 +91,6 @@ const AiChatsScreen = ({ id }: AiChatsScreenProps) => {
                                 >
                                     {item.last_message}
                                 </ThemedText>
-                                {/* <ThemedText>{item.download_txt}</ThemedText>
-                            <ThemedText>{item.download_pdf}</ThemedText>
-                            <ThemedText>{item.download_docx}</ThemedText> */}
                             </ThemedView>
                         </ThemedView>
                     </TouchableOpacity>
@@ -87,9 +101,7 @@ const AiChatsScreen = ({ id }: AiChatsScreenProps) => {
 
     return (
         <ThemedView className="px-4">
-            <ThemedText type="title" className="mt-2 mb-4">
-                {name} ile Sohbetlerim
-            </ThemedText>
+            <ScreenHeader title={name} />
             {content}
         </ThemedView>
     );
